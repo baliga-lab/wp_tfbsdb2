@@ -143,7 +143,7 @@ function gene_table_shortcode($attr, $content=null)
     $content .= "  <tbody>";
     foreach ($entries as $g) {
         $content .= "    <tr>";
-        $content .= "      <td>$g->entrez</td><td>$g->description</td><td>$g->chromosome</td><td>$g->strand</td><td>$g->tss</td><td>$g->start_promoter</td><td>$g->stop_promoter</td>";
+        $content .= "      <td><a href=\"index.php/gene?id=$g->id\">$g->entrez</a></td><td>$g->description</td><td>$g->chromosome</td><td>$g->strand</td><td>$g->tss</td><td>$g->start_promoter</td><td>$g->stop_promoter</td>";
         $content .= "    </tr>";
     }
     $content .= "  </tbody>";
@@ -168,7 +168,7 @@ function motif_table_shortcode($attr, $content=null)
     $content .= "  <tbody>";
     foreach ($entries as $m) {
         $content .= "    <tr>";
-        $content .= "      <td>$m->name</td><td>$m->db</td>";
+        $content .= "      <td><a href=\"index.php/motif?id=$m->id\">$m->name</a></td><td>$m->db</td>";
         $content .= "    </tr>";
     }
     $content .= "  </tbody>";
@@ -207,6 +207,32 @@ function gene_tf_binding_sites_shortcode($attr, $content=null)
     return $content;
 }
 
+function motif_target_genes_shortcode($attr, $content=null)
+{
+    $motif_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/motif_target_genes/" . rawurlencode($motif_id));
+    $entries = json_decode($result_json)->target_genes;
+    $content = "<table id=\"target_genes\" class=\"stripe row-border\">";
+    $content .= "  <thead>";
+    $content .= "    <tr><th>Entrez ID</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>Promoter</th><th>TSS</th><th># Sites</th></tr>";
+    $content .= "  </thead>";
+    $content .= "  <tbody>";
+    foreach ($entries as $g) {
+        $content .= "    <tr>";
+        $content .= "      <td><a href=\"index.php/gene?id=$g->gene_id\">$g->entrez_id</a></td><td>$g->description</td><td>$g->chromosome</td><td>$g->strand</td><td>$g->promoter_start-$g->promoter_stop</td><td>$g->tss</td><td>$g->num_sites</td>";
+        $content .= "    </tr>";
+    }
+    $content .= "  </tbody>";
+    $content .= "</table>";
+    $content .= "<script>";
+    $content .= "  jQuery(document).ready(function() {";
+    $content .= "    jQuery('#target_genes').DataTable({});";
+    $content .= "  });";
+    $content .= "</script>";
+    return $content;
+}
+
 function tfbsdb2api_add_shortcodes()
 {
     add_shortcode('summary', 'summary_shortcode');
@@ -219,6 +245,7 @@ function tfbsdb2api_add_shortcodes()
     add_shortcode('motif_table', 'motif_table_shortcode');
     add_shortcode('gene_table', 'gene_table_shortcode');
     add_shortcode('gene_tf_binding_sites', 'gene_tf_binding_sites_shortcode');
+    add_shortcode('motif_target_genes', 'motif_target_genes_shortcode');
 
     // Search related short codes
     add_shortcode('tfbsdb2_searchbox', 'search_box_shortcode');
