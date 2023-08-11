@@ -110,8 +110,21 @@ function search_tfbsdb2api()
                                      rawurlencode($search_term));
     $result = json_decode($result_json);
 
+    // Attempt to find the type of result and redirect to that page
+    if ($result->num_results > 0) {
+        $item_comps = explode(':', $result->results[0]->id);
+        error_log("item type: " . $item_comps[0] . " item id: " . $item_comps[1]);
+        if ($item_comps[0] == "GENE") {
+            $page = get_page_by_path('gene');
+        } else if ($item_comps[0] == "MOTIF") {
+            $page = get_page_by_path('motif');
+        }
+        wp_safe_redirect(get_permalink($page->ID) . "?id=" . rawurlencode($item_comps[1]));
+        exit;
+    }
+
     // Short circuit search results
-    $page = get_page_by_path('search-results');
+    $page = get_page_by_path('no-search-results');
     wp_safe_redirect(get_permalink($page->ID) . "?search_term=" . rawurlencode($search_term));
     exit;
 }
