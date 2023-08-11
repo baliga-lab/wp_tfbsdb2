@@ -59,61 +59,52 @@ function search_box_shortcode($attr, $content)
 
 
 function _render_gene_table($gene_infos) {
-    $content = "<table>";
+    $content = "<table id=\"gene_info\" class=\"stripe row-border\">";
     $content .= "  <thead>";
-    $content .= "    <tr><th>Entrez ID</th><th>EnsEMBL ID</th><th>Preferred Name</th><th>Uniprot ID</th></tr>";
+    $content .= "    <tr><th>Entrez ID</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>Promoter</th><th>TSS</th></tr>";
     $content .= "  </thead>";
     $content .= "  <tbody>";
     foreach ($gene_infos as $gene_info) {
-        if ($gene_info->entrez_id == null) { $entrez_link = '-'; }
+        if ($gene_info->entrez == null) { $entrez_link = '-'; }
         else {
-            $entrez_link = "<a href=\"https://www.ncbi.nlm.nih.gov/gene/?term=" . $gene_info->entrez_id . "\" target=\"_blank\">" . $gene_info->entrez_id . "</a>";
+            $entrez_link = "<a href=\"https://www.ncbi.nlm.nih.gov/gene/?term=" . $gene_info->entrez . "\" target=\"_blank\">" . $gene_info->entrez . "</a>";
         }
 
         $content .= "    <tr>";
-        $content .= "      <td>" . $entrez_link . "</td>";
-        $content .= "      <td><a href=\"http://www.ensembl.org/id/" . $gene_info->ensembl_id . "\" target=\"_blank\">" . $gene_info->ensembl_id . "</a></td>";
-        $content .= "      <td><a href=\"index.php/gene/?gene=$gene_info->preferred\">$gene_info->preferred</a></td>";
-        $content .= "      <td><a href=\"https://www.uniprot.org/uniprot/" . $gene_info->uniprot_id . "\" target=\"_blank\">" . $gene_info->uniprot_id . "</a></td>";
+        $content .= "      <td>$entrez_link</td>";
+        $content .= "      <td>$gene_info->description</td>";
+        $content .= "      <td>$gene_info->chromosome</td>";
+        $content .= "      <td>$gene_info->orientation</td>";
+        $content .= "      <td>$gene_info->start_promoter - $gene_info->stop_promoter</td>";
+        $content .= "      <td>$gene_info->tss</td>";
         $content .= "    </tr>";
     }
     $content .= "  </tbody>";
     $content .= "</table>";
-    return $content;
-}
+    $content .= "<script>";
+    $content .= "  jQuery(document).ready(function() {";
 
-function gene_info_table($gene_name)
-{
-    $source_url = get_option('source_url', '');
-    $result_json = file_get_contents($source_url . "/gene_info/" .
-                                     rawurlencode($gene_name));
-    $gene_info = json_decode($result_json);
-    $content = "";
-    if ($gene_info->preferred == 'NA') {
-        return $content;
-    }
-    if ($gene_info->preferred != null) {
-        $preferred_name = $gene_info->preferred;
-    } else {
-        $preferred_name = $gene_name;
-        $gene_info->preferred = '-';
-    }
-
-    $desc = preg_replace('/\[.*\]/', '', $gene_info->description);
-
-    $content .= "<h3>" . $preferred_name . " - " . $desc;
-    $content .= "</h3>";
-    $content .= "<h4>Function</h4>";
-    $content .= "<p>$gene_info->function</p>";
-    $content .= "<a href=\"index.php/gene-uniprot/?gene=" . $gene_name . "\">" . "Uniprot Browser" . "</a>";
-    $content .= _render_gene_table([$gene_info]);
-    $content .= "";
+    $content .= "    jQuery('#gene_info').DataTable({";
+    $content .= "      'paging': false,";
+    $content .= "      'info': false,";
+    $content .= "      'searching': false";
+    $content .= "    });";
+    $content .= "  });";
+    $content .= "</script>";
     return $content;
 }
 
 function gene_info_shortcode($attr, $content=null)
 {
-    return gene_info_table(get_query_var('gene'));
+    $gene_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/gene_info/" .
+                                     rawurlencode($gene_id));
+    $gene_info = json_decode($result_json);
+    $content = "";
+    $content .= _render_gene_table([$gene_info]);
+    $content .= "";
+    return $content;
 }
 
 function gene_uniprot_shortcode($attr, $content=null)
@@ -190,6 +181,31 @@ function motif_table_shortcode($attr, $content=null)
     return $content;
 }
 
+function gene_tf_binding_sites_shortcode($attr, $content=null)
+{
+    $gene_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/gene_tf_binding_sites/" . rawurlencode($gene_id));
+    $entries = json_decode($result_json)->tf_binding_sites;
+    $content = "<table id=\"tf_binding_sites\" class=\"stripe row-border\">";
+    $content .= "  <thead>";
+    $content .= "    <tr><th>Motif</th><th>Motif DB</th><th>Strand</th><th>Location</th><th>p-value</th><th>Match Sequence</th></tr>";
+    $content .= "  </thead>";
+    $content .= "  <tbody>";
+    foreach ($entries as $s) {
+        $content .= "    <tr>";
+        $content .= "      <td><a href=\"index.php/motif?id=$s->motif_id\">$s->motif</a></td><td>$s->motif_database</td><td>$s->strand</td><td>$s->start-$s->stop</td><td>$s->p_value</td><td>$s->match_sequence</td>";
+        $content .= "    </tr>";
+    }
+    $content .= "  </tbody>";
+    $content .= "</table>";
+    $content .= "<script>";
+    $content .= "  jQuery(document).ready(function() {";
+    $content .= "    jQuery('#tf_binding_sites').DataTable({});";
+    $content .= "  });";
+    $content .= "</script>";
+    return $content;
+}
 
 function tfbsdb2api_add_shortcodes()
 {
@@ -202,6 +218,7 @@ function tfbsdb2api_add_shortcodes()
     // Lists
     add_shortcode('motif_table', 'motif_table_shortcode');
     add_shortcode('gene_table', 'gene_table_shortcode');
+    add_shortcode('gene_tf_binding_sites', 'gene_tf_binding_sites_shortcode');
 
     // Search related short codes
     add_shortcode('tfbsdb2_searchbox', 'search_box_shortcode');

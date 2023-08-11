@@ -76,13 +76,11 @@ require_once('ajax_source.php');
  * available explicitly through the filter mechanism.
  */
 function add_query_vars_filter($vars) {
-    $vars[] = "regulon";
-    $vars[] = "regulator";
     $vars[] = "mutation";
     $vars[] = "gene";
+    $vars[] = "id";
     $vars[] = "search_term";
-    $vars[] = "program";
-    $vars[] = "drug";
+    $vars[] = "";
     return $vars;
 }
 
