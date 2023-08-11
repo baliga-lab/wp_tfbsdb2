@@ -1,0 +1,30 @@
+/*
+table {
+  font-size: 10pt;
+}
+*/
+
+#cytoscape {
+    width: 600px;
+    height: 200px;
+    display: block;
+}
+
+#cytoscape2 {
+    width: 800px;
+    height: 800px;
+    display: block;
+}
+
+#cytoscape_mutation {
+    width: 600px;
+    height: 400px;
+    display: block;
+}
+
+.up-regulates, .activates {
+    color: green;
+}
+.down-regulates, .represses {
+    color: red;
+}
