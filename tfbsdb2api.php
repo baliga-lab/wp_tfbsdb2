@@ -92,6 +92,8 @@ function tfbsdb2_init()
     wp_enqueue_style('wp-tfbsdb2api', plugin_dir_url(__FILE__) . 'css/wp-tfbsdb2api.css');
     wp_enqueue_script('jquery-ui-autocomplete');
     wp_enqueue_script('datatables', plugin_dir_url(__FILE__) . 'js/jquery.dataTables.min.js', array('jquery'));
+    wp_enqueue_script('igv', 'https://cdn.jsdelivr.net/npm/igv@2.15.5/dist/igv.min.js');
+    wp_enqueue_script('seqlogo', plugin_dir_url(__FILE__) . 'js/seqlogo.js');
 
     tfbsdb2api_add_shortcodes();
     tfbsdb2api_ajax_source_init();

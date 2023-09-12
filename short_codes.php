@@ -61,7 +61,7 @@ function search_box_shortcode($attr, $content)
 function _render_gene_table($gene_infos) {
     $content = "<table id=\"gene_info\" class=\"stripe row-border\">";
     $content .= "  <thead>";
-    $content .= "    <tr><th>Entrez ID</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>Promoter</th><th>TSS</th></tr>";
+    $content .= "    <tr><th>Entrez ID</th><th>Name</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>Promoter</th><th>TSS</th></tr>";
     $content .= "  </thead>";
     $content .= "  <tbody>";
     foreach ($gene_infos as $gene_info) {
@@ -69,9 +69,14 @@ function _render_gene_table($gene_infos) {
         else {
             $entrez_link = "<a href=\"https://www.ncbi.nlm.nih.gov/gene/?term=" . $gene_info->entrez . "\" target=\"_blank\">" . $gene_info->entrez . "</a>";
         }
+        $synonyms = '-';
+        if (count($gene_info->synonyms) > 0) {
+            $synonyms = $gene_info->synonyms[0]->name;
+        }
 
         $content .= "    <tr>";
         $content .= "      <td>$entrez_link</td>";
+        $content .= "      <td>$synonyms</td>";
         $content .= "      <td>$gene_info->description</td>";
         $content .= "      <td>$gene_info->chromosome</td>";
         $content .= "      <td>$gene_info->orientation</td>";
@@ -233,6 +238,75 @@ function motif_target_genes_shortcode($attr, $content=null)
     return $content;
 }
 
+function igv_shortcode($attr, $content=null)
+{
+    $gene_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/gene_info/" . rawurlencode($gene_id));
+    $gene_info = json_decode($result_json);
+    $locus = "$gene_info->chromosome:$gene_info->start_promoter-$gene_info->stop_promoter";
+
+    $content = "<div id=\"igv-div\"></div>";
+    $content .= "<script>";
+    $content .= "var igvDiv = document.getElementById(\"igv-div\");";
+    $content .= "console.log(igvDiv);";
+    $content .= "var options =";
+    $content .= "{";
+    $content .= "  genome: \"hg38\",";
+    $content .= "  locus: \"$locus\",";
+    $content .= "  tracks: [";
+    $content .= "    {";
+    $content .= "      \"name\": \"HG00103\",";
+    $content .= "      \"url\": \"https://s3.amazonaws.com/1000genomes/data/HG00103/alignment/HG00103.alt_bwamem_GRCh38DH.20150718.GBR.low_coverage.cram\",";
+    $content .= "      \"indexURL\": \"https://s3.amazonaws.com/1000genomes/data/HG00103/alignment/HG00103.alt_bwamem_GRCh38DH.20150718.GBR.low_coverage.cram.crai\",";
+    $content .= "      \"format\": \"cram\"";
+    $content .= "    },";
+    $content .= "    {";
+    $content .= "      \"name\": \"ENCODE H3k27ac\",";
+    $content .= "      \"url\": \"https://api.genome.ucsc.edu/getData/track?track=wgEncodeRegMarkH3k27acGm12878&genome=hg38&chrom=$gene_info->chromosome\"";
+    $content .= "    }";
+    $content .= "  ]";
+    $content .= "};";
+    $content .= "igv.createBrowser(igvDiv, options)";
+    $content .= "  .then(function (browser) {";
+    $content .= "    console.log(\"Created IGV browser\");";
+    $content .= "  });";
+    $content .= "</script>";
+    /*
+      ENCODE['wgEncodeRegMarkH3k27acNhlf', 'wgEncodeRegMarkH3k27acNhek', 'wgEncodeRegMarkH3k27acK562',
+      'wgEncodeRegMarkH3k27acHuvec', 'wgEncodeRegMarkH3k27acHsmm', 'wgEncodeRegMarkH3k27acH1hesc', 'wgEncodeRegMarkH3k27acGm12878'
+      ]
+      https://api.genome.ucsc.edu/getData/track?track=wgEncodeRegMarkH3k27acGm12878&genome=hg38&chrom=chr1
+     */
+    return $content;
+}
+
+
+function seqlogo_shortcode($attr, $content=null)
+{
+    $motif_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/motif_pssm/" . rawurlencode($motif_id));
+    $pssm = json_decode($result_json)->pssm;
+    $content = "<div><div id=\"motif-pssm\"></div></div>";
+    $content .= "<script>";
+    $content .= "seqlogo.makeLogo('motif-pssm',";
+    $content .= "{";
+    $content .= "  alphabet: ['A', 'C', 'G', 'T'],";
+    $content .= "  values: [";
+    foreach ($pssm as $row) {
+        $content .= "    [$row->a, $row->c, $row->g, $row->t],";
+    }
+    $content .= "  ]";
+    $content .= "},";
+    $content .= "{";
+    $content .= "  width: 300, height: 180,";
+    $content .= "  glyphStyle: '20pt Helvetica'";
+    $content .= "});";
+    $content .= "</script>";
+    return $content;
+}
+
 function tfbsdb2api_add_shortcodes()
 {
     add_shortcode('summary', 'summary_shortcode');
@@ -246,9 +320,12 @@ function tfbsdb2api_add_shortcodes()
     add_shortcode('gene_table', 'gene_table_shortcode');
     add_shortcode('gene_tf_binding_sites', 'gene_tf_binding_sites_shortcode');
     add_shortcode('motif_target_genes', 'motif_target_genes_shortcode');
+    add_shortcode('igv_browser', 'igv_shortcode');
+    add_shortcode('seqlogo', 'seqlogo_shortcode');
 
     // Search related short codes
     add_shortcode('tfbsdb2_searchbox', 'search_box_shortcode');
 }
+
 
 ?>
