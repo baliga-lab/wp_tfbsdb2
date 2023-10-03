@@ -119,7 +119,7 @@ function motif_shortinfo_shortcode($attr, $content=null)
     $result_json = file_get_contents($source_url . "/motif_shortinfo/" .
                                      rawurlencode($motif_id));
     $motif_info = json_decode($result_json);
-    $content = "Motif: $motif_info->motif_name | $motif_info->motif_database";
+    $content = "<div>Motif: $motif_info->motif_name | $motif_info->motif_database</div>";
     return $content;
 }
 
@@ -250,6 +250,34 @@ function motif_target_genes_shortcode($attr, $content=null)
     return $content;
 }
 
+function motif_tfs_shortcode($attr, $content=null)
+{
+    $motif_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/motif_tfs/" . rawurlencode($motif_id));
+    $entries = json_decode($result_json)->tfs;
+    $content .= "<h2>TFS that bind to Motif</h2>";
+    $content .= "<table id=\"tfs\" class=\"stripe row-border\">";
+    $content .= "  <thead>";
+    $content .= "    <tr><th>Entrez ID</th><th>Name</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>Promoter</th><th>TSS</th></tr>";
+    $content .= "  </thead>";
+    $content .= "  <tbody>";
+    foreach ($entries as $g) {
+        $content .= "    <tr>";
+        $content .= "      <td><a href=\"index.php/gene?id=$g->gene_id\">$g->entrez_id</a></td><td>$g->synonyms</td><td>$g->description</td><td>$g->chromosome</td><td>$g->strand</td><td>$g->promoter_start-$g->promoter_stop</td><td>$g->tss</td>";
+        $content .= "    </tr>";
+    }
+    $content .= "  </tbody>";
+    $content .= "</table>";
+    $content .= "<script>";
+    $content .= "  jQuery(document).ready(function() {";
+    $content .= "    jQuery('#tfs').DataTable({});";
+    $content .= "  });";
+    $content .= "</script>";
+    return $content;
+}
+
+
 function igv_shortcode($attr, $content=null)
 {
     $static_url = get_option('static_url', '');
@@ -364,6 +392,7 @@ function tfbsdb2api_add_shortcodes()
     add_shortcode('seqlogo', 'seqlogo_shortcode');
 
     add_shortcode('motif_shortinfo', 'motif_shortinfo_shortcode');
+    add_shortcode('motif_tfs', 'motif_tfs_shortcode');
 
     // Search related short codes
     add_shortcode('tfbsdb2_searchbox', 'search_box_shortcode');
