@@ -298,18 +298,21 @@ function motif_tfs_shortcode($attr, $content=null)
 function igv_shortcode($attr, $content=null)
 {
     $static_url = get_option('static_url', '');
-    $encode_all_cre_url = $static_url . "/GRCh38-cCREs.bed";
-    $encode_dnase_url = $static_url . "/GRCh38-cCREs.DNase-H3K4me3.bed";
-    $encode_ctcf_url = $static_url . "/GRCh38-cCREs.CTCF-only.bed";
-    $encode_promoter_url = $static_url . "/GRCh38-cCREs.PLS.bed";
-    $encode_pels_url = $static_url . "/GRCh38-cCREs.pELS.bed";
-    $encode_dels_url = $static_url . "/GRCh38-cCREs.dELS.bed";
 
     $gene_id = get_query_var('id');
     $source_url = get_option('source_url', '');
     $result_json = file_get_contents($source_url . "/gene_info/" . rawurlencode($gene_id));
     $gene_info = json_decode($result_json);
     $locus = "$gene_info->chromosome:$gene_info->start_promoter-$gene_info->stop_promoter";
+
+    $chrom = $gene_info->chromosome;
+
+    $encode_all_cre_url = $static_url . "/GRCh38-cCREs_$chrom.bed";
+    $encode_dnase_url = $static_url . "/GRCh38-cCREs.DNase-H3K4me3_$chrom.bed";
+    $encode_ctcf_url = $static_url . "/GRCh38-cCREs.CTCF-only_$chrom.bed";
+    $encode_promoter_url = $static_url . "/GRCh38-cCREs.PLS_$chrom.bed";
+    $encode_pels_url = $static_url . "/GRCh38-cCREs.pELS_$chrom.bed";
+    $encode_dels_url = $static_url . "/GRCh38-cCREs.dELS_$chrom.bed";
 
     $content = "<div id=\"igv-div\"></div>";
     $content .= "<script>";
