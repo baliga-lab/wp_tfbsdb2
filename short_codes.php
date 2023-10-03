@@ -112,6 +112,17 @@ function gene_info_shortcode($attr, $content=null)
     return $content;
 }
 
+function motif_shortinfo_shortcode($attr, $content=null)
+{
+    $motif_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/motif_shortinfo/" .
+                                     rawurlencode($motif_id));
+    $motif_info = json_decode($result_json);
+    $content = "Motif: $motif_info->motif_name | $motif_info->motif_database";
+    return $content;
+}
+
 function gene_uniprot_shortcode($attr, $content=null)
 {
     $gene_name = get_query_var('gene');
@@ -218,7 +229,8 @@ function motif_target_genes_shortcode($attr, $content=null)
     $source_url = get_option('source_url', '');
     $result_json = file_get_contents($source_url . "/motif_target_genes/" . rawurlencode($motif_id));
     $entries = json_decode($result_json)->target_genes;
-    $content = "<table id=\"target_genes\" class=\"stripe row-border\">";
+    $content .= "<h2>Genes with Motif</h2>";
+    $content .= "<table id=\"target_genes\" class=\"stripe row-border\">";
     $content .= "  <thead>";
     $content .= "    <tr><th>Entrez ID</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>Promoter</th><th>TSS</th><th># Sites</th></tr>";
     $content .= "  </thead>";
@@ -350,6 +362,8 @@ function tfbsdb2api_add_shortcodes()
     add_shortcode('motif_target_genes', 'motif_target_genes_shortcode');
     add_shortcode('igv_browser', 'igv_shortcode');
     add_shortcode('seqlogo', 'seqlogo_shortcode');
+
+    add_shortcode('motif_shortinfo', 'motif_shortinfo_shortcode');
 
     // Search related short codes
     add_shortcode('tfbsdb2_searchbox', 'search_box_shortcode');
