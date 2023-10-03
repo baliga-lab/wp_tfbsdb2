@@ -107,6 +107,7 @@ function gene_info_shortcode($attr, $content=null)
                                      rawurlencode($gene_id));
     $gene_info = json_decode($result_json);
     $content = "";
+    $content .= "<h3>Gene Annotations</h3>";
     $content .= _render_gene_table([$gene_info]);
     $content .= "";
     return $content;
@@ -120,6 +121,22 @@ function motif_shortinfo_shortcode($attr, $content=null)
                                      rawurlencode($motif_id));
     $motif_info = json_decode($result_json);
     $content = "<div>Motif: $motif_info->motif_name | $motif_info->motif_database</div>";
+    return $content;
+}
+
+function gene_shortinfo_shortcode($attr, $content=null)
+{
+    $gene_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/gene_info/" .
+                                     rawurlencode($gene_id));
+    $gene_info = json_decode($result_json);
+    if (count($gene_info->synonyms) > 0) {
+        $synonyms = $gene_info->synonyms[0]->name;
+    } else {
+        $synonyms = $gene_info->entrez;
+    }
+    $content = "<div>$synonyms | $gene_info->description</div>";
     return $content;
 }
 
@@ -154,12 +171,12 @@ function gene_table_shortcode($attr, $content=null)
     $entries = json_decode($result_json)->genes;
     $content = "<table id=\"genes\" class=\"stripe row-border\">";
     $content .= "  <thead>";
-    $content .= "    <tr><th>Entrez</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>TSS</th><th>Prom. Start</th><th>Prom. Stop</th></tr>";
+    $content .= "    <tr><th>Entrez</th><th>Name</th><th>Description</th><th>Chromosome</th><th>Strand</th><th>TSS</th><th>Prom. Start</th><th>Prom. Stop</th></tr>";
     $content .= "  </thead>";
     $content .= "  <tbody>";
     foreach ($entries as $g) {
         $content .= "    <tr>";
-        $content .= "      <td><a href=\"index.php/gene?id=$g->id\">$g->entrez</a></td><td>$g->description</td><td>$g->chromosome</td><td>$g->strand</td><td>$g->tss</td><td>$g->start_promoter</td><td>$g->stop_promoter</td>";
+        $content .= "      <td><a href=\"index.php/gene?id=$g->id\">$g->entrez</a></td><td>$g->synonyms</td><td>$g->description</td><td>$g->chromosome</td><td>$g->strand</td><td>$g->tss</td><td>$g->start_promoter</td><td>$g->stop_promoter</td>";
         $content .= "    </tr>";
     }
     $content .= "  </tbody>";
@@ -391,6 +408,7 @@ function tfbsdb2api_add_shortcodes()
     add_shortcode('igv_browser', 'igv_shortcode');
     add_shortcode('seqlogo', 'seqlogo_shortcode');
 
+    add_shortcode('gene_shortinfo', 'gene_shortinfo_shortcode');
     add_shortcode('motif_shortinfo', 'motif_shortinfo_shortcode');
     add_shortcode('motif_tfs', 'motif_tfs_shortcode');
 
