@@ -214,13 +214,14 @@ function motif_table_shortcode($attr, $content=null)
     return $content;
 }
 
-function gene_tf_binding_sites_shortcode($attr, $content=null)
+function regulated_by_shortcode($attr, $content=null)
 {
     $gene_id = get_query_var('id');
     $source_url = get_option('source_url', '');
-    $result_json = file_get_contents($source_url . "/gene_tf_binding_sites/" . rawurlencode($gene_id));
+    $result_json = file_get_contents($source_url . "/regulated_by/" . rawurlencode($gene_id));
     $entries = json_decode($result_json)->tf_binding_sites;
-    $content = "<table id=\"tf_binding_sites\" class=\"stripe row-border\">";
+    $content = "<h3>Regulated by</h3>";
+    $content .= "<table id=\"regulated_by\" class=\"stripe row-border\">";
     $content .= "  <thead>";
     $content .= "    <tr><th>Motif</th><th>Motif DB</th><th>Strand</th><th>Location</th><th>p-value</th><th>Match Sequence</th></tr>";
     $content .= "  </thead>";
@@ -234,11 +235,39 @@ function gene_tf_binding_sites_shortcode($attr, $content=null)
     $content .= "</table>";
     $content .= "<script>";
     $content .= "  jQuery(document).ready(function() {";
-    $content .= "    jQuery('#tf_binding_sites').DataTable({});";
+    $content .= "    jQuery('#regulated_by').DataTable({});";
     $content .= "  });";
     $content .= "</script>";
     return $content;
 }
+
+function regulates_shortcode($attr, $content=null)
+{
+    $gene_id = get_query_var('id');
+    $source_url = get_option('source_url', '');
+    $result_json = file_get_contents($source_url . "/regulates/" . rawurlencode($gene_id));
+    $entries = json_decode($result_json)->result;
+    $content = "<h3>Regulates</h3>";
+    $content .= "<table id=\"regulates\" class=\"stripe row-border\">";
+    $content .= "  <thead>";
+    $content .= "    <tr><th>Target gene</th><th>Motif</th><th>Motif DB</th><th># sites</th></tr>";
+    $content .= "  </thead>";
+    $content .= "  <tbody>";
+    foreach ($entries as $s) {
+        $content .= "    <tr>";
+        $content .= "      <td>$s->gene_name</td><td><a href=\"index.php/motif?id=$s->motif_id\">$s->motif</a></td><td>$s->motif_database</td><td>$s->num_sites</td>";
+        $content .= "    </tr>";
+    }
+    $content .= "  </tbody>";
+    $content .= "</table>";
+    $content .= "<script>";
+    $content .= "  jQuery(document).ready(function() {";
+    $content .= "    jQuery('#regulates').DataTable({});";
+    $content .= "  });";
+    $content .= "</script>";
+    return $content;
+}
+
 
 function motif_target_genes_shortcode($attr, $content=null)
 {
@@ -406,7 +435,8 @@ function tfbsdb2api_add_shortcodes()
     // Lists
     add_shortcode('motif_table', 'motif_table_shortcode');
     add_shortcode('gene_table', 'gene_table_shortcode');
-    add_shortcode('gene_tf_binding_sites', 'gene_tf_binding_sites_shortcode');
+    add_shortcode('regulates', 'regulates_shortcode');
+    add_shortcode('regulated_by', 'regulated_by_shortcode');
     add_shortcode('motif_target_genes', 'motif_target_genes_shortcode');
     add_shortcode('igv_browser', 'igv_shortcode');
     add_shortcode('seqlogo', 'seqlogo_shortcode');
