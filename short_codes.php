@@ -342,6 +342,7 @@ function igv_shortcode($attr, $content=null)
     $encode_promoter_url = $static_url . "/GRCh38-cCREs.PLS_$chrom.bed";
     $encode_pels_url = $static_url . "/GRCh38-cCREs.pELS_$chrom.bed";
     $encode_dels_url = $static_url . "/GRCh38-cCREs.dELS_$chrom.bed";
+    $motif_tracks_url = $static_url . "/GRCh38-motifs_$chrom.bed";
 
     $content = "<div id=\"igv-div\"></div>";
     $content .= "<script>";
@@ -380,6 +381,11 @@ function igv_shortcode($attr, $content=null)
     $content .= "    {";
     $content .= "      \"name\": \"ENCODE distal-like\",";
     $content .= "      \"url\": \"$encode_dels_url\",";
+    $content .= "      \"format\": \"annotation\"";
+    $content .= "    },";
+    $content .= "    {";
+    $content .= "      \"name\": \"TFBSDB Motifs\",";
+    $content .= "      \"url\": \"$motif_tracks_url\",";
     $content .= "      \"format\": \"annotation\"";
     $content .= "    }";
     $content .= "  ]";
